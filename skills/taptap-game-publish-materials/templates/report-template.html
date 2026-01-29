@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TapTap 发布物料校验报告 - [游戏名称]</title>
+    <style>
+        :root {
+            --taptap-primary: #00D9C5;
+            --taptap-dark: #000050;
+            --taptap-purple: #7364FF;
+            --bg-main: #FFFFFF;
+            --bg-secondary: #F5F5F5;
+            --text-primary: #000000;
+            --text-secondary: #666666;
+            --border-color: #E0E0E0;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --error: #F44336;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+        }
+
+        /* 顶部标题栏 */
+        .header {
+            background: var(--taptap-dark);
+            color: white;
+            padding: 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header .meta {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* 主容器 */
+        .main-container {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--bg-main);
+            min-height: calc(100vh - 120px);
+        }
+
+        /* 侧边栏导航 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-main);
+            border-right: 1px solid var(--border-color);
+            position: sticky;
+            top: 120px;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .sidebar h3 {
+            color: var(--taptap-primary);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--taptap-primary);
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .sidebar a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .sidebar a:hover {
+            background: var(--bg-secondary);
+            color: var(--taptap-primary);
+        }
+
+        .sidebar a.active {
+            background: var(--taptap-primary);
+            color: white;
+        }
+
+        .sidebar .status-icon {
+            margin-right: 0.5rem;
+        }
+
+        /* 主内容区 */
+        .content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        /* 摘要卡片 */
+        .summary-card {
+            background: var(--taptap-primary);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 217, 197, 0.2);
+        }
+
+        .summary-card h2 {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .summary-stats {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .summary-stats .stat {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .summary-stats .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        /* 素材卡片 */
+        .material-card {
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            scroll-margin-top: 140px;
+        }
+
+        .material-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .material-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .material-title h3 {
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-pass { background: #E8F5E9; color: var(--success); }
+        .status-warn { background: #FFF3E0; color: var(--warning); }
+        .status-fail { background: #FFEBEE; color: var(--error); }
+
+        .material-body {
+            padding: 1.5rem;
+        }
+
+        /* TapTap 位置标签 */
+        .taptap-location {
+            background: var(--taptap-dark);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .taptap-location strong {
+            color: var(--taptap-primary);
+        }
+
+        /* 文本内容区 */
+        .text-content {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .text-content pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: inherit;
+            margin: 0;
+        }
+
+        /* 复制按钮 */
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: var(--taptap-primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .copy-btn:hover {
+            background: var(--taptap-purple);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0, 217, 197, 0.3);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 图片预览区 */
+        .image-preview {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+
+        .image-preview img {
+            max-width: 200px;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .image-preview img:hover {
+            border-color: var(--taptap-primary);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 217, 197, 0.3);
+        }
+
+        .image-preview .video-thumbnail {
+            position: relative;
+        }
+
+        .image-preview .video-thumbnail::after {
+            content: "▶";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        /* 规格信息 */
+        .spec-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .spec-item {
+            background: var(--bg-secondary);
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            border-left: 3px solid var(--taptap-primary);
+        }
+
+        .spec-item strong {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+
+        /* 问题详情（可展开） */
+        .issues-section {
+            margin-top: 1rem;
+            border-top: 2px dashed var(--border-color);
+            padding-top: 1rem;
+        }
+
+        .issues-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            user-select: none;
+        }
+
+        .issues-toggle:hover {
+            background: #E8F5E9;
+        }
+
+        .issues-toggle.has-error:hover {
+            background: #FFEBEE;
+        }
+
+        .issues-toggle.has-warning:hover {
+            background: #FFF3E0;
+        }
+
+        .issues-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .issues-content.expanded {
+            max-height: 2000px;
+        }
+
+        .issue-item {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
+
+        .issue-item.error {
+            background: #FFEBEE;
+            border-color: var(--error);
+        }
+
+        .issue-item.warning {
+            background: #FFF3E0;
+            border-color: var(--warning);
+        }
+
+        .issue-item h4 {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .priority-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .priority-high {
+            background: var(--error);
+            color: white;
+        }
+
+        .priority-medium {
+            background: var(--warning);
+            color: white;
+        }
+
+        .priority-low {
+            background: #9E9E9E;
+            color: white;
+        }
+
+        .issue-item p {
+            margin: 0.5rem 0;
+        }
+
+        .issue-item ol {
+            margin-left: 1.5rem;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main-container {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+
+            .content {
+                padding: 1rem;
+            }
+
+            .summary-stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .spec-info {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 图片模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            cursor: pointer;
+        }
+
+        .modal img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+        }
+
+        .modal.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部标题栏 -->
+    <div class="header">
+        <h1>📋 TapTap 发布物料校验报告</h1>
+        <div class="meta">
+            游戏名称：<strong>[游戏名称]</strong> | 
+            生成时间：<strong>2026-01-30 15:30:00</strong>
+        </div>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="main-container">
+        <!-- 侧边栏导航 -->
+        <aside class="sidebar">
+            <h3>🧭 快捷导览</h3>
+            <nav>
+                <a href="#summary"><span class="status-icon">📊</span> 校验摘要</a>
+                <a href="#material-1"><span class="status-icon">✅</span> 1. 游戏名称</a>
+                <a href="#material-2"><span class="status-icon">✅</span> 2. 游戏简介</a>
+                <a href="#material-3"><span class="status-icon">✅</span> 3. 开发者的话</a>
+                <a href="#material-4"><span class="status-icon">✅</span> 4. 更新日志</a>
+                <a href="#material-5"><span class="status-icon">✅</span> 5. 游戏图标</a>
+                <a href="#material-6"><span class="status-icon">⚠️</span> 6. 游戏截图</a>
+                <a href="#material-7"><span class="status-icon">⚠️</span> 7. 实机录屏</a>
+                <a href="#material-8"><span class="status-icon">⚠️</span> 8. 宣传图 16:9</a>
+                <a href="#material-9"><span class="status-icon">✅</span> 9. 宣传图 1:1</a>
+                <a href="#material-10"><span class="status-icon">✅</span> 10. 首页推荐语</a>
+            </nav>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="content">
+            <!-- 校验摘要 -->
+            <section id="summary" class="summary-card">
+                <h2>📊 校验摘要</h2>
+                <div class="summary-stats">
+                    <div class="stat">
+                        <span>✅ 通过项：</span>
+                        <span class="stat-number">7/10</span>
+                    </div>
+                    <div class="stat">
+                        <span>⚠️ 警告项：</span>
+                        <span class="stat-number">3/10</span>
+                    </div>
+                    <div class="stat">
+                        <span>❌ 不通过项：</span>
+                        <span class="stat-number">0/10</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 素材卡片（按 TapTap 填写顺序） -->
+
+            <!-- 1. 游戏名称 -->
+            <div id="material-1" class="material-card">
+                <div class="material-header">
+                    <div class="material-title">
+                        <h3>
+                            <span>1.</span>
+                            <span>游戏名称</span>
+                        </h3>
+                        <span class="status-badge status-pass">✅ 通过</span>
+                    </div>
+                </div>
+                <div class="material-body">
+                    <div class="taptap-location">
+                        <strong>TapTap 后台位置：</strong> 游戏信息 > 基础信息 > 游戏名称
+                    </div>
+
+                    <div class="text-content">
+                        <pre id="text-game-name">[游戏名称占位]</pre>
+                        <button class="copy-btn" onclick="copyText('text-game-name')">📋 复制</button>
+                    </div>
+
+                    <div class="spec-info">
+                        <div class="spec-item">
+                            <strong>字符限制</strong>
+                            <span>23/50 字符 ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>规则检查</strong>
+                            <span>无特殊符号 ✅</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 游戏简介 -->
+            <div id="material-2" class="material-card">
+                <div class="material-header">
+                    <div class="material-title">
+                        <h3>
+                            <span>2.</span>
+                            <span>游戏简介</span>
+                        </h3>
+                        <span class="status-badge status-pass">✅ 通过</span>
+                    </div>
+                </div>
+                <div class="material-body">
+                    <div class="taptap-location">
+                        <strong>TapTap 后台位置：</strong> 游戏信息 > 基础信息 > 游戏简介
+                    </div>
+
+                    <div class="text-content">
+                        <pre id="text-game-intro">[游戏简介占位文本]
+
+这里是游戏简介的内容，介绍游戏的核心玩法和特色。</pre>
+                        <button class="copy-btn" onclick="copyText('text-game-intro')">📋 复制</button>
+                    </div>
+
+                    <div class="spec-info">
+                        <div class="spec-item">
+                            <strong>字符统计</strong>
+                            <span>234/500 字符 ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>联系方式</strong>
+                            <span>无 ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>外链检查</strong>
+                            <span>无 ✅</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 开发者的话 -->
+            <div id="material-3" class="material-card">
+                <div class="material-header">
+                    <div class="material-title">
+                        <h3>
+                            <span>3.</span>
+                            <span>开发者的话</span>
+                        </h3>
+                        <span class="status-badge status-pass">✅ 通过</span>
+                    </div>
+                </div>
+                <div class="material-body">
+                    <div class="taptap-location">
+                        <strong>TapTap 后台位置：</strong> 游戏信息 > 基础信息 > 开发者的话
+                    </div>
+
+                    <div class="text-content">
+                        <pre id="text-dev-note">[开发者的话占位文本]
+
+这里是开发者想对玩家说的话。</pre>
+                        <button class="copy-btn" onclick="copyText('text-dev-note')">📋 复制</button>
+                    </div>
+
+                    <div class="spec-info">
+                        <div class="spec-item">
+                            <strong>内容检查</strong>
+                            <span>无违规内容 ✅</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. 更新日志 -->
+            <div id="material-4" class="material-card">
+                <div class="material-header">
+                    <div class="material-title">
+                        <h3>
+                            <span>4.</span>
+                            <span>更新日志</span>
+                        </h3>
+                        <span class="status-badge status-pass">✅ 通过</span>
+                    </div>
+                </div>
+                <div class="material-body">
+                    <div class="taptap-location">
+                        <strong>TapTap 后台位置：</strong> 游戏信息 > 版本管理 > 更新日志
+                    </div>
+
+                    <div class="text-content">
+                        <pre id="text-changelog">v1.0.0
+
+新增内容：
+1. [占位]
+2. [占位]
+
+优化内容：
+1. [占位]
+
+Bug 修复：
+1. [占位]</pre>
+                        <button class="copy-btn" onclick="copyText('text-changelog')">📋 复制</button>
+                    </div>
+
+                    <div class="spec-info">
+                        <div class="spec-item">
+                            <strong>格式检查</strong>
+                            <span>使用有序列表 ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>内容检查</strong>
+                            <span>无宣传内容 ✅</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. 游戏图标 -->
+            <div id="material-5" class="material-card">
+                <div class="material-header">
+                    <div class="material-title">
+                        <h3>
+                            <span>5.</span>
+                            <span>游戏图标</span>
+                        </h3>
+                        <span class="status-badge status-pass">✅ 通过</span>
+                    </div>
+                </div>
+                <div class="material-body">
+                    <div class="taptap-location">
+                        <strong>TapTap 后台位置：</strong> 游戏信息 > 基础信息 > 游戏图标
+                    </div>
+
+                    <div class="image-preview">
+                        <img src="../01-图标/icon.png" alt="游戏图标" onclick="openImage(this)">
+                    </div>
+
+                    <div class="spec-info">
+                        <div class="spec-item">
+                            <strong>文件路径</strong>
+                            <span>01-图标/icon.png</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>尺寸</strong>
+                            <span>1024x1024px ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>格式</strong>
+                            <span>PNG ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>底色</strong>
+                            <span>深蓝色渐变 ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>安全区域</strong>
+                            <span>重要内容避开 22% 圆角区 ✅</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. 游戏截图 -->
+            <div id="material-6" class="material-card">
+                <div class="material-header">
+                    <div class="material-title">
+                        <h3>
+                            <span>6.</span>
+                            <span>游戏截图</span>
+                        </h3>
+                        <span class="status-badge status-warn">⚠️ 有警告</span>
+                    </div>
+                </div>
+                <div class="material-body">
+                    <div class="taptap-location">
+                        <strong>TapTap 后台位置：</strong> 游戏信息 > 媒体素材 > 游戏截图
+                    </div>
+
+                    <div class="image-preview">
+                        <img src="../02-截图/screenshot_01.png" alt="截图1" onclick="openImage(this)">
+                        <img src="../02-截图/screenshot_02.png" alt="截图2" onclick="openImage(this)">
+                        <img src="../02-截图/screenshot_03.png" alt="截图3" onclick="openImage(this)">
+                        <img src="../02-截图/screenshot_04.png" alt="截图4" onclick="openImage(this)">
+                        <img src="../02-截图/screenshot_05.png" alt="截图5" onclick="openImage(this)">
+                    </div>
+
+                    <div class="spec-info">
+                        <div class="spec-item">
+                            <strong>文件路径</strong>
+                            <span>02-截图/*.png</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>数量</strong>
+                            <span>5 张 ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>比例</strong>
+                            <span>横图 16:9 一致 ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>分辨率</strong>
+                            <span>1920x1080px ✅</span>
+                        </div>
+                    </div>
+
+                    <!-- 可展开的问题详情 -->
+                    <div class="issues-section">
+                        <div class="issues-toggle has-warning" onclick="toggleIssues(this)">
+                            <span>⚠️</span>
+                            <span><strong>发现 1 个警告项</strong></span>
+                            <span style="margin-left: auto;">▼</span>
+                        </div>
+                        <div class="issues-content">
+                            <div class="issue-item warning">
+                                <h4>
+                                    <span>⚠️</span>
+                                    <span>screenshot_02.png - 实机画面占比偏低</span>
+                                    <span class="priority-badge priority-medium">🟡 中优先级</span>
+                                </h4>
+                                <p><strong>问题描述：</strong> [具体问题描述占位]</p>
+                                <p><strong>影响：</strong> [影响说明占位]</p>
+                                <p><strong>修复建议：</strong></p>
+                                <ol>
+                                    <li>[修复建议 1]</li>
+                                    <li>[修复建议 2]</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. 实机录屏 -->
+            <div id="material-7" class="material-card">
+                <div class="material-header">
+                    <div class="material-title">
+                        <h3>
+                            <span>7.</span>
+                            <span>实机录屏</span>
+                        </h3>
+                        <span class="status-badge status-warn">⚠️ 有警告</span>
+                    </div>
+                </div>
+                <div class="material-body">
+                    <div class="taptap-location">
+                        <strong>TapTap 后台位置：</strong> 游戏信息 > 媒体素材 > 游戏实机录屏
+                    </div>
+
+                    <div class="image-preview">
+                        <div class="video-thumbnail">
+                            <img src="../03-实机录屏/gameplay_thumbnail.png" alt="录屏封面" onclick="alert('请在本地查看视频文件')">
+                        </div>
+                    </div>
+
+                    <div class="spec-info">
+                        <div class="spec-item">
+                            <strong>文件路径</strong>
+                            <span>03-实机录屏/gameplay.mp4</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>时长</strong>
+                            <span>1分32秒 ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>格式</strong>
+                            <span>MP4 (H.264) ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>分辨率</strong>
+                            <span>1920x1080px ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>文件大小</strong>
+                            <span>245MB ✅</span>
+                        </div>
+                    </div>
+
+                    <div class="issues-section">
+                        <div class="issues-toggle has-warning" onclick="toggleIssues(this)">
+                            <span>⚠️</span>
+                            <span><strong>发现 1 个警告项</strong></span>
+                            <span style="margin-left: auto;">▼</span>
+                        </div>
+                        <div class="issues-content">
+                            <div class="issue-item warning">
+                                <h4>
+                                    <span>⚠️</span>
+                                    <span>前 5 秒未充分展示核心玩法</span>
+                                    <span class="priority-badge priority-high">🔴 高优先级</span>
+                                </h4>
+                                <p><strong>问题描述：</strong> [具体问题描述占位]</p>
+                                <p><strong>影响：</strong> [影响说明占位]</p>
+                                <p><strong>修复建议：</strong></p>
+                                <ol>
+                                    <li>[修复建议占位]</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 8. 宣传图 16:9 -->
+            <div id="material-8" class="material-card">
+                <div class="material-header">
+                    <div class="material-title">
+                        <h3>
+                            <span>8.</span>
+                            <span>宣传图 16:9</span>
+                        </h3>
+                        <span class="status-badge status-warn">⚠️ 有警告</span>
+                    </div>
+                </div>
+                <div class="material-body">
+                    <div class="taptap-location">
+                        <strong>TapTap 后台位置：</strong> 游戏信息 > 媒体素材 > 宣传图（横版）
+                    </div>
+
+                    <div class="image-preview">
+                        <img src="../04-宣传图_16x9/hero.png" alt="宣传图 16:9" onclick="openImage(this)">
+                    </div>
+
+                    <div class="spec-info">
+                        <div class="spec-item">
+                            <strong>文件路径</strong>
+                            <span>04-宣传图_16x9/hero.png</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>尺寸</strong>
+                            <span>1920x1080px ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>格式</strong>
+                            <span>PNG ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>文件大小</strong>
+                            <span>3.2MB ✅</span>
+                        </div>
+                    </div>
+
+                    <div class="issues-section">
+                        <div class="issues-toggle has-warning" onclick="toggleIssues(this)">
+                            <span>⚠️</span>
+                            <span><strong>发现 1 个警告项</strong></span>
+                            <span style="margin-left: auto;">▼</span>
+                        </div>
+                        <div class="issues-content">
+                            <div class="issue-item warning">
+                                <h4>
+                                    <span>⚠️</span>
+                                    <span>游戏标题文字过大</span>
+                                    <span class="priority-badge priority-medium">🟡 中优先级</span>
+                                </h4>
+                                <p><strong>问题描述：</strong> [具体问题描述占位]</p>
+                                <p><strong>影响：</strong> [影响说明占位]</p>
+                                <p><strong>修复建议：</strong></p>
+                                <ol>
+                                    <li>[修复建议占位]</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 9. 宣传图 1:1 -->
+            <div id="material-9" class="material-card">
+                <div class="material-header">
+                    <div class="material-title">
+                        <h3>
+                            <span>9.</span>
+                            <span>宣传图 1:1</span>
+                        </h3>
+                        <span class="status-badge status-pass">✅ 通过</span>
+                    </div>
+                </div>
+                <div class="material-body">
+                    <div class="taptap-location">
+                        <strong>TapTap 后台位置：</strong> 游戏信息 > 媒体素材 > 宣传图（方形）
+                    </div>
+
+                    <div class="image-preview">
+                        <img src="../05-宣传图_1x1/hero_square.png" alt="宣传图 1:1" onclick="openImage(this)">
+                    </div>
+
+                    <div class="spec-info">
+                        <div class="spec-item">
+                            <strong>文件路径</strong>
+                            <span>05-宣传图_1x1/hero_square.png</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>尺寸</strong>
+                            <span>1440x1440px ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>格式</strong>
+                            <span>PNG ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>文件大小</strong>
+                            <span>890KB ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>内容一致性</strong>
+                            <span>与 16:9 宣传图主体一致 ✅</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 10. 首页推荐语 -->
+            <div id="material-10" class="material-card">
+                <div class="material-header">
+                    <div class="material-title">
+                        <h3>
+                            <span>10.</span>
+                            <span>首页推荐语</span>
+                        </h3>
+                        <span class="status-badge status-pass">✅ 通过</span>
+                    </div>
+                </div>
+                <div class="material-body">
+                    <div class="taptap-location">
+                        <strong>TapTap 后台位置：</strong> 游戏信息 > 推荐信息 > 首页推荐语
+                    </div>
+
+                    <div class="text-content">
+                        <pre id="text-recommendation">[首页推荐语占位]</pre>
+                        <button class="copy-btn" onclick="copyText('text-recommendation')">📋 复制</button>
+                    </div>
+
+                    <div class="spec-info">
+                        <div class="spec-item">
+                            <strong>字数统计</strong>
+                            <span>13/25 字符 ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>极限词检查</strong>
+                            <span>无 ✅</span>
+                        </div>
+                        <div class="spec-item">
+                            <strong>宣传语检查</strong>
+                            <span>客观描述 ✅</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- 图片模态框 -->
+    <div id="imageModal" class="modal" onclick="closeModal()">
+        <img id="modalImage" src="" alt="预览图">
+    </div>
+
+    <script>
+        // 复制文本功能
+        function copyText(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.innerText;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                // 显示复制成功提示
+                const btn = element.nextElementSibling;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ 已复制';
+                btn.style.background = '#4CAF50';
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            }).catch(err => {
+                alert('复制失败，请手动复制');
+            });
+        }
+
+        // 展开/收起问题详情
+        function toggleIssues(element) {
+            const content = element.nextElementSibling;
+            const arrow = element.querySelector('span:last-child');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                arrow.textContent = '▼';
+            } else {
+                content.classList.add('expanded');
+                arrow.textContent = '▲';
+            }
+        }
+
+        // 打开图片预览
+        function openImage(img) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.classList.add('show');
+            modalImg.src = img.src;
+        }
+
+        // 关闭图片预览
+        function closeModal() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('show');
+        }
+
+        // 侧边栏导航高亮
+        const sections = document.querySelectorAll('.material-card, #summary');
+        const navLinks = document.querySelectorAll('.sidebar a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (scrollY >= (sectionTop - 200)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

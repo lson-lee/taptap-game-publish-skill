@@ -214,170 +214,44 @@ output/发布物料_YYYYMMDD/
 
 ### 校验报告格式（HTML 可视化报告）
 
-生成 `00-清单与校验/校验报告.html`，包含以下内容：
+生成 `00-清单与校验/校验报告.html`。
 
-#### 设计规范
+**使用模板：** 参考 `templates/report-template.html` 作为标准模板，确保样式和功能一致。
 
-**配色方案（使用 TapTap 品牌色）：**
-- 主色：`#00D9C5`（TapTap 色，用于标题、按钮、链接）
-- 星空蓝：`#000050`（用于深色背景）
-- 幻象紫：`#7364FF`（用于强调、标签）
-- 背景：`#FFFFFF`（主背景）/ `#F5F5F5`（次级背景）
-- 文本：`#000000`（主文本）/ `#666666`（次级文本）
+**必须包含以下内容：**
 
-**功能要求：**
-1. **图文并茂**：每个素材显示缩略图预览（点击放大）
-2. **一键复制**：每个文本内容（简介、推荐语等）旁边有"复制"按钮
-3. **提交清单**：明确每个素材对应 TapTap 后台的哪个上传位置
-4. **校验结果**：清晰展示通过/警告/不通过项，带优先级标识
+**核心功能要求：**
 
-#### HTML 结构示例
+1. **按 TapTap 填写顺序排列**：
+   - 游戏名称 → 游戏简介 → 开发者的话 → 更新日志
+   - 游戏图标 → 游戏截图 → 实机录屏
+   - 宣传图 16:9 → 宣传图 1:1 → 宣传片
+   - 首页推荐语 → PC/主机素材 → 编辑推荐位素材
 
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>TapTap 发布物料校验报告 - [游戏名称]</title>
-  <style>
-    :root {
-      --taptap-primary: #00D9C5;
-      --taptap-dark: #000050;
-      --taptap-purple: #7364FF;
-    }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    .header { background: var(--taptap-dark); color: white; padding: 2rem; }
-    .summary { background: #f5f5f5; padding: 1.5rem; border-radius: 8px; }
-    .material-card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin: 1rem 0; }
-    .material-preview img { max-width: 200px; border-radius: 4px; cursor: pointer; }
-    .copy-btn { background: var(--taptap-primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
-    .status-pass { color: #4CAF50; }
-    .status-warn { color: #FF9800; }
-    .status-fail { color: #F44336; }
-    .priority-high { background: #F44336; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; }
-    .priority-medium { background: #FF9800; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>TapTap 发布物料校验报告</h1>
-    <p>游戏名称：XXX | 生成时间：2026-01-30 14:30:00</p>
-  </div>
+2. **图文并茂**：
+   - 所有图片素材显示缩略图预览（点击放大）
+   - 所有文本物料完整显示，带一键复制按钮
 
-  <div class="container">
-    <!-- 校验摘要 -->
-    <div class="summary">
-      <h2>📋 校验摘要</h2>
-      <p>✅ 通过项：8/12 | ⚠️ 警告项：3/12 | ❌ 不通过项：1/12</p>
-    </div>
+3. **侧边栏导航**：
+   - 固定悬浮侧边栏，显示所有素材项
+   - 滚动时自动高亮当前查看的素材
+   - 点击快速跳转到对应素材
 
-    <!-- 提交清单（对应 TapTap 后台位置） -->
-    <section id="submit-checklist">
-      <h2 style="color: var(--taptap-primary)">📤 提交清单与映射</h2>
-      
-      <div class="material-card">
-        <h3>1. 游戏图标 ✅</h3>
-        <div class="material-preview">
-          <img src="../01-图标/icon.png" alt="游戏图标" onclick="openFullImage(this)">
-        </div>
-        <p><strong>TapTap 后台位置：</strong> 游戏信息 > 基础信息 > 游戏图标</p>
-        <p><strong>文件：</strong> 01-图标/icon.png</p>
-        <p><strong>规格：</strong> 1024x1024px, PNG, 符合要求</p>
-      </div>
+4. **问题项展开/收起**：
+   - 有问题的素材卡片显示"发现 X 个警告项"
+   - 点击可展开/收起查看详细问题和修复建议
+   - 默认收起状态，保持页面简洁
 
-      <div class="material-card">
-        <h3>2. 游戏截图 ⚠️</h3>
-        <div class="material-preview">
-          <img src="../02-截图/screenshot_01.png" alt="截图1">
-          <img src="../02-截图/screenshot_02.png" alt="截图2">
-          <img src="../02-截图/screenshot_03.png" alt="截图3">
-        </div>
-        <p><strong>TapTap 后台位置：</strong> 游戏信息 > 媒体素材 > 游戏截图</p>
-        <p><strong>文件：</strong> 02-截图/*.png (共3张)</p>
-        <p><strong>问题：</strong> screenshot_03.png 格式为 WebP，需转换为 PNG <span class="priority-high">🔴 必须修复</span></p>
-      </div>
+5. **提交清单与映射**：
+   - 每个素材明确标注 TapTap 后台位置
+   - 格式：`游戏信息 > 基础信息 > 游戏图标`
+   - 包含文件路径、规格说明、校验状态
 
-      <div class="material-card">
-        <h3>3. 游戏简介</h3>
-        <div style="background: #f5f5f5; padding: 1rem; border-radius: 4px; position: relative;">
-          <p id="game-intro">这是一款XXX类型的游戏，玩家可以...</p>
-          <button class="copy-btn" onclick="copyText('game-intro')">📋 复制</button>
-        </div>
-        <p><strong>TapTap 后台位置：</strong> 游戏信息 > 基础信息 > 游戏简介</p>
-        <p><strong>字数：</strong> 123/500 字符 ✅</p>
-      </div>
-
-      <div class="material-card">
-        <h3>4. 首页推荐语</h3>
-        <div style="background: #f5f5f5; padding: 1rem; border-radius: 4px; position: relative;">
-          <p id="recommendation">探索赛博朋克世界的冒险之旅</p>
-          <button class="copy-btn" onclick="copyText('recommendation')">📋 复制</button>
-        </div>
-        <p><strong>TapTap 后台位置：</strong> 游戏信息 > 推荐信息 > 首页推荐语</p>
-        <p><strong>字数：</strong> 13/25 字符 ✅</p>
-      </div>
-
-      <!-- 更多素材... -->
-    </section>
-
-    <!-- 校验问题详情 -->
-    <section id="validation-issues">
-      <h2 style="color: #F44336">⚠️ 需要修复的问题</h2>
-      
-      <div class="material-card" style="border-left: 4px solid #F44336;">
-        <h3>❌ 游戏截图 3 - 格式错误 <span class="priority-high">必须修复</span></h3>
-        <p><strong>问题描述：</strong> 文件格式为 WebP，TapTap 要求 JPG/PNG</p>
-        <p><strong>影响：</strong> 无法上传，阻断上架流程</p>
-        <p><strong>修复建议：</strong></p>
-        <ol>
-          <li>使用图像工具转换为 PNG 格式</li>
-          <li>命令示例：<code>convert screenshot_03.webp screenshot_03.png</code></li>
-          <li>确保转换后尺寸和清晰度不变</li>
-        </ol>
-      </div>
-
-      <div class="material-card" style="border-left: 4px solid #FF9800;">
-        <h3>⚠️ 宣传图 16:9 - 文本过大 <span class="priority-medium">建议修复</span></h3>
-        <p><strong>问题描述：</strong> 游戏 LOGO 占图片面积约 35%，规范建议 < 25%</p>
-        <p><strong>影响：</strong> 可能影响首页推荐通过率</p>
-        <p><strong>修复建议：</strong> 缩小 LOGO 至图片高度的 1/4 左右</p>
-      </div>
-    </section>
-
-    <!-- 问题汇总 -->
-    <section id="summary">
-      <h2>📊 问题汇总</h2>
-      <ul>
-        <li>🔴 <strong>必须修复（阻断上架）：</strong> 1 项</li>
-        <li>🟠 <strong>强烈建议修复（影响审核）：</strong> 1 项</li>
-        <li>🟡 <strong>建议优化（提升质量）：</strong> 1 项</li>
-      </ul>
-    </section>
-  </div>
-
-  <script>
-    function copyText(elementId) {
-      const text = document.getElementById(elementId).innerText;
-      navigator.clipboard.writeText(text).then(() => {
-        alert('已复制到剪贴板！');
-      });
-    }
-    
-    function openFullImage(img) {
-      window.open(img.src, '_blank');
-    }
-  </script>
-</body>
-</html>
-```
-
-**HTML 报告必须包含：**
-1. 使用 TapTap 品牌配色
-2. 所有素材的图片预览（可点击放大）
-3. 每个文本内容的一键复制按钮
-4. 明确的 TapTap 后台位置映射
-5. 清晰的问题分级和修复建议
-6. 响应式设计，支持移动端查看
+**模板使用说明：**
+- 完整的 HTML 模板见 `templates/report-template.html`
+- 生成报告时，读取模板并替换实际数据
+- 保持样式、布局和交互功能一致
+- TapTap 品牌配色已在模板中预设（主色 #00D9C5、星空蓝 #000050、幻象紫 #7364FF）
 
 ---
 
@@ -389,7 +263,7 @@ output/发布物料_YYYYMMDD/
 4. **检测优先**：生成图片前，先检测内置生图能力
 5. **结构化输出**：统一整理到标准目录结构
 6. **详细校验**：依据 `rules.md` 逐项校验，明确问题和修复建议
-7. **可视化报告**：生成图文并茂的 HTML 报告，包含图片预览、一键复制、提交清单
+7. **可视化报告**：使用 `templates/report-template.html` 生成图文并茂的 HTML 报告
 8. **提问引用规则**：问询式模式下，每次提问都从 `rules.md` 引用对应规则
 9. **安全区域处理**：生图时安全区域仍需完整绘制，不使用模糊/截断/边框等糊弄
 
