@@ -9,15 +9,16 @@
 本仓库用于沉淀 TapTap 开发/发布相关的 Skills，面向外部开发者与安装技能的使用者。
 
 - 目标：提供可复用的、基于客观规则的技能，辅助生成或校验 TapTap 平台所需内容
-- 安装方式：兼容 `npx skills add <owner>/taptap-game-develop-skills --list`
+- 安装方式：兼容 `npx skills add <owner>/taptap-game-publish-skill --list`
 
 ## 当前可用技能
 
-| Skill | 状态 | 作用 | 入口 |
-| --- | --- | --- | --- |
+| Skill                         | 状态               | 作用                                                        | 入口                                    |
+| ----------------------------- | ------------------ | ----------------------------------------------------------- | --------------------------------------- |
 | taptap-game-publish-materials | 可用（持续优化中） | 基于 TapTap 发布页面与官方文档要求，生成/校验上架物料与文案 | `skills/taptap-game-publish-materials/` |
 
 补充说明：
+
 - 覆盖：图标、截图、实机录屏、宣传图/宣传片、首页推荐语、PC/主机封面与编辑推荐素材等
 
 ## 安装
@@ -25,13 +26,13 @@
 列出仓库内可安装技能：
 
 ```
-npx skills add lson-lee/taptap-game-develop-skills --list
+npx skills add lson-lee/taptap-game-publish-skill --list
 ```
 
 安装指定技能：
 
 ```
-npx skills add lson-lee/taptap-game-develop-skills --skill taptap-game-publish-materials
+npx skills add lson-lee/taptap-game-publish-skill --skill taptap-game-publish-materials
 ```
 
 ## 路线图（简要）
@@ -41,6 +42,7 @@ npx skills add lson-lee/taptap-game-develop-skills --skill taptap-game-publish-m
 ## 贡献
 
 欢迎提交 PR 或 Issue：
+
 - 新增技能：请放在 `skills/<skill-name>/` 并包含 `SKILL.md`
 - 更新规则：请保持“客观、可核对、不扩写”原则
 
