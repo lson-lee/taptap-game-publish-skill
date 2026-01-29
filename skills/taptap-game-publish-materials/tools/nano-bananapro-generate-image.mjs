@@ -37,6 +37,7 @@ function usageAndExit(code = 1, msg) {
       "",
       "spec.json 示例：",
       '  { "prompt": "......", "aspectRatio": "16:9", "imageSize": "2K" }',
+      '  { "prompt": {"user_intent":"..."}, "aspectRatio": "16:9", "imageSize": "2K" }',
       "",
     ].join("\n"),
   );
@@ -148,8 +149,20 @@ async function main() {
     usageAndExit(1, `spec 解析失败：${e?.message || String(e)}`);
   }
 
-  const prompt = spec.prompt;
-  if (!prompt || typeof prompt !== "string") usageAndExit(1, "spec.prompt 必须是非空字符串");
+  const promptValue = spec.prompt;
+  if (!promptValue) usageAndExit(1, "spec.prompt 必填");
+
+  // prompt 支持：
+  // - string：直接作为提示词
+  // - object/array：自动 JSON.stringify（更适合 Nano Banana Pro 的结构化提示词）
+  let promptText;
+  if (typeof promptValue === "string") {
+    promptText = promptValue;
+  } else if (typeof promptValue === "object") {
+    promptText = JSON.stringify(promptValue, null, 2);
+  } else {
+    usageAndExit(1, "spec.prompt 必须是 string 或 object/array");
+  }
 
   // 按 Gemini 官网 REST 示例：
   // - contents.parts[].text
@@ -158,7 +171,7 @@ async function main() {
   const body = {
     contents: [
       {
-        parts: [{ text: prompt }],
+        parts: [{ text: promptText }],
       },
     ],
     generationConfig: {

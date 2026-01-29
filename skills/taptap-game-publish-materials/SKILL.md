@@ -130,7 +130,7 @@ description: TapTap 平台发布物料生成与校验。用于根据最终规则
 
 #### 生图 Prompt 构建规范（重要）
 
-生成图片时，必须严格遵循以下规范：
+生成图片时，必须严格遵循以下规范，并且**确保所有图片要求都在 prompt 里被明确表达**（尺寸/比例/文字限制/安全区/禁止项等）。
 
 **安全区域处理（关键）：**
 - 安全区域（如宣传图上下 108px、图标 22% 圆角区）**仍需绘制完整内容**
@@ -138,14 +138,137 @@ description: TapTap 平台发布物料生成与校验。用于根据最终规则
 - **禁止使用**：模糊效果、截断、黑白边框、渐变遮罩、留白等方式糊弄
 - **正确做法**：在安全区绘制背景延伸、装饰元素、环境细节等次要内容，保持画面完整性
 
-**Prompt 示例（宣传图 16:9）：**
+---
+
+#### 提示词交付方式（按用户选择的工具“给最合适的格式”）
+
+你必须先问用户选哪种方式，然后按下面规则输出：
+
+##### A. 用户选择 **Nano Banana / Nano Banana Pro（Gemini）**
+
+**要求：把提示词改成 JSON 规格**（更利于复杂约束被拆解与对齐），并让 AI 现场用最合适的 JSON 字段去调用脚本 `tools/nano-bananapro-generate-image.mjs`。
+
+- 交付物必须包含：
+  - `image-spec.json`（JSON 规格）
+  - 一条可复制的命令（`node ... --input ... --out ...`）
+  - 输出路径必须落到结构化目录对应文件夹
+
+**JSON 以“下面的示例结构”为准**（不强制固定字段名；只要能被 JSON 结构清晰表达即可）。
+
+但必须确保这些**硬性要求**在 JSON 的 `prompt` 内明确出现（可以拆到多个字段里）：
+- **尺寸/比例**：例如 16:9 / 1:1（并在 `aspectRatio` 里同步填写）
+- **清晰度/质量**：高清、细节清晰、无压缩糊、无噪点糊；非截图、非简单拼贴
+- **文字规则**：必须/禁止出现哪些文字（例如“仅允许游戏标题” + 标题面积占比限制）
+- **安全区域**：哪些区域不能放关键主体/文字，但仍要完整绘制背景延伸
+- **禁止项**：水印、边框、截断、模糊遮罩、留白、额外文字等
+
+**示例（宣传图 16:9，JSON prompt 参考结构）**：
+
+说明：
+- 下面的 `prompt` 结构参考了社区整理的 Nano Banana 结构化 JSON Schema（更适合把“主体/场景/文字/禁止项/安全区”拆开描述），可参考：[Nano Banana structured JSON prompt schema（社区）](https://gist.github.com/alexewerlof/1d13401a7647339469141dc2960e66a9)。
+
+`image-spec.json`
+```json
+{
+  "prompt": {
+    "user_intent": "为 TapTap 生成宣传图（16:9），赛博朋克霓虹城市，含且仅含游戏标题。",
+    "meta": {
+      "target_platform": "TapTap",
+      "asset_type": "宣传图_16x9",
+      "style_keywords": ["cyberpunk", "neon city", "high detail", "cinematic lighting"]
+    },
+    "scene": {
+      "location": "霓虹城市街道",
+      "time": "night",
+      "lighting": "neon lights, cinematic, high contrast, clean highlights",
+      "background_elements": ["city skyline", "neon signs (no readable text)", "wet reflective ground"]
+    },
+    "subject": [
+      {
+        "id": "hero",
+        "type": "person",
+        "description": "主角站在画面中心，姿态坚定，细节清晰，非卡通",
+        "position": "center",
+        "pose": "standing",
+        "expression": "stoic"
+      }
+    ],
+    "text_rendering": {
+      "enabled": true,
+      "text_content": "XXX",
+      "placement": "center_upper",
+      "font_style": "bold sans-serif, clean, high legibility",
+      "constraints": {
+        "only_allowed_text": true,
+        "max_area_ratio": 0.25
+      }
+    },
+    "layout_constraints": {
+      "safe_zones": [
+        {
+          "name": "top_safe_zone",
+          "area": "top_108px",
+          "rule": "必须完整绘制背景延伸/装饰细节；禁止放置关键角色主体或任何文字"
+        },
+        {
+          "name": "bottom_safe_zone",
+          "area": "bottom_108px",
+          "rule": "必须完整绘制背景延伸/装饰细节；禁止放置关键角色主体或任何文字"
+        }
+      ],
+      "no_cropping": true,
+      "no_borders": true,
+      "no_blur_masks": true,
+      "no_blank_margins": true
+    },
+    "quality_requirements": {
+      "high_definition": true,
+      "not_a_screenshot": true,
+      "not_a_simple_collage": true
+    },
+    "negative_prompt": [
+      "watermark",
+      "extra text",
+      "slogan",
+      "subtitle",
+      "UI overlay",
+      "logo icon",
+      "frame",
+      "border",
+      "blur",
+      "cropped",
+      "low resolution"
+    ]
+  },
+  "aspectRatio": "16:9",
+  "imageSize": "2K"
+}
 ```
-游戏宣传图，1920x1080px，16:9 比例，赛博朋克风格。
-画面构图：主角站在霓虹城市中央，游戏标题"XXX"位于画面中部偏上位置，标题清晰可读，占比不超过总面积 25%。
-安全区域处理：上下各 108px 区域绘制城市天际线和地面延伸，不放置关键角色或文字。
-画面完整性：整个画面无模糊、无截断、无边框，所有区域均有完整绘制。
-禁止：除游戏标题外，不得出现任何其他文字、宣传语、标语。
+
+命令（示例）：
+```bash
+node skills/taptap-game-publish-materials/tools/nano-bananapro-generate-image.mjs \
+  --input ./image-spec.json \
+  --out ./output/发布物料_YYYYMMDD/04-宣传图_16x9/hero.png
 ```
+
+##### B. 用户选择 **通用对话类 AI（ChatGPT / Gemini / 豆包等）**
+
+**要求：输出纯语言 prompt**，让用户在对应 AI 中直接粘贴生成，然后把生成结果放回指定文件夹。
+
+- 交付物必须包含：
+  - 一段可直接粘贴的 prompt（纯文本）
+  - 明确告诉用户：保存为哪个文件名、放到哪个输出目录
+  - 如果该工具支持“参数/尺寸/比例”的单独字段，也要在文字里明确写出“尺寸/比例/格式”
+
+##### C. 用户选择 **Midjourney / Stable Diffusion 等**
+
+**要求：输出最适配该工具的提示词格式**（例如 MJ 需要 `--ar`、SD 常用 negative prompt/采样参数等；若用户未提供参数偏好，则只给“最关键且不容易误解”的参数），并要求用户将结果导出为符合规则的尺寸/格式后回填目录。
+
+- 交付物必须包含：
+  - Prompt（含该工具常用参数写法）
+  - 必须满足的导出要求（尺寸/比例/格式/大小限制）
+  - 回填路径与文件名
 
 ---
 
